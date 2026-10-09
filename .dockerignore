@@ -1,0 +1,13 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.git
+.github
+tests
+monitoring
+k8s
+*.md
+.gitignore
+.dockerignore

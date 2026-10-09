@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secscan
+  labels:
+    app: secscan
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: secscan
+  template:
+    metadata:
+      labels:
+        app: secscan
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics/"
+        prometheus.io/port: "8000"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          # Replace with your pushed GHCR image.
+          image: ghcr.io/vladkrytii/secscan:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

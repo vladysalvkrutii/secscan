@@ -1,0 +1,5 @@
+# Normalize all text files to LF so files copied into Linux containers
+# (Dockerfile, configs, Python) never carry Windows CRLF line endings.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
