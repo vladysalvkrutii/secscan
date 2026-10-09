@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SecScan — HTTP Security Headers Scanner</title>
+  <style>
+    :root {
+      --bg: #0d1420; --surface: #151f2e; --surface-2: #1b2838;
+      --fg: #e6edf6; --muted: #94a3b6; --line: #2a3a4f; --accent: #4da3ec;
+      --a: #2ecc71; --b: #8bd450; --c: #f1c40f; --d: #e67e22; --f: #e74c3c;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); line-height: 1.5; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+    header h1 { margin: 0 0 4px; font-size: 26px; }
+    header p { margin: 0 0 24px; color: var(--muted); }
+    .accent { color: var(--accent); }
+    form { display: flex; gap: 8px; margin-bottom: 24px; }
+    input {
+      flex: 1; min-width: 0; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-size: 15px;
+    }
+    input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    button {
+      padding: 12px 20px; border: none; border-radius: 10px; background: var(--accent);
+      color: #06121f; font-weight: 700; font-size: 15px; cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    #msg { color: var(--f); margin-bottom: 16px; min-height: 1em; }
+    #result[hidden] { display: none; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+    .top { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+    .grade {
+      width: 76px; height: 76px; flex-shrink: 0; border-radius: 16px; display: grid; place-items: center;
+      font-size: 40px; font-weight: 800; color: #06121f;
+    }
+    .grade.A { background: var(--a); } .grade.B { background: var(--b); }
+    .grade.C { background: var(--c); } .grade.D { background: var(--d); } .grade.F { background: var(--f); }
+    .meta { min-width: 0; }
+    .meta .score { font-size: 22px; font-weight: 700; }
+    .meta .url { color: var(--muted); font-family: var(--mono); font-size: 13px; word-break: break-all; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+    .mark { flex-shrink: 0; font-weight: 800; }
+    .mark.ok { color: var(--a); } .mark.no { color: var(--f); }
+    .hname { font-family: var(--mono); font-size: 13.5px; }
+    .advice { color: var(--muted); font-size: 13px; }
+    footer { margin-top: 28px; color: var(--muted); font-size: 13px; text-align: center; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Sec<span class="accent">Scan</span></h1>
+      <p>Check a site's HTTP security headers and get a grade from A to F.</p>
+    </header>
+
+    <form id="form">
+      <input id="url" type="text" placeholder="https://example.com" value="https://github.com" autocomplete="off" />
+      <button id="btn" type="submit">Scan</button>
+    </form>
+    <div id="msg"></div>
+
+    <section id="result" hidden>
+      <div class="card">
+        <div class="top">
+          <div class="grade" id="grade">A</div>
+          <div class="meta">
+            <div class="score"><span id="score">0</span><span style="color:var(--muted)">/100</span></div>
+            <div class="url" id="rurl"></div>
+          </div>
+        </div>
+        <ul id="headers"></ul>
+      </div>
+    </section>
+
+    <footer>
+      API docs at <a href="/docs">/docs</a> · metrics at <a href="/metrics/">/metrics</a> ·
+      <a href="https://github.com/vladysalvkrutii/secscan">source on GitHub</a>
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const btn = document.getElementById("btn");
+    const msg = document.getElementById("msg");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const url = document.getElementById("url").value.trim();
+      if (!url) return;
+      msg.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Scanning…";
+      try {
+        const res = await fetch("/scan?url=" + encodeURIComponent(url));
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Scan failed");
+        render(data);
+      } catch (err) {
+        result.hidden = true;
+        msg.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Scan";
+      }
+    });
+
+    function render(d) {
+      const g = document.getElementById("grade");
+      g.textContent = d.grade;
+      g.className = "grade " + d.grade;
+      document.getElementById("score").textContent = d.score;
+      document.getElementById("rurl").textContent = d.url + "  (HTTP " + d.status_code + ")";
+      const ul = document.getElementById("headers");
+      ul.innerHTML = "";
+      for (const h of d.headers) {
+        const li = document.createElement("li");
+        const mark = document.createElement("span");
+        mark.className = "mark " + (h.present ? "ok" : "no");
+        mark.textContent = h.present ? "✓" : "✗";
+        const body = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "hname";
+        name.textContent = h.name;
+        body.appendChild(name);
+        if (!h.present && h.advice) {
+          const adv = document.createElement("div");
+          adv.className = "advice";
+          adv.textContent = h.advice;
+          body.appendChild(adv);
+        }
+        li.appendChild(mark);
+        li.appendChild(body);
+        ul.appendChild(li);
+      }
+      result.hidden = false;
+    }
+  </script>
+</body>
+</html>

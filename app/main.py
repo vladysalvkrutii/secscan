@@ -13,8 +13,10 @@ import json
 import logging
 import sys
 import time
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 from prometheus_client import make_asgi_app
 from pydantic import BaseModel, Field
 
@@ -93,8 +95,16 @@ app = FastAPI(
 app.mount("/metrics", make_asgi_app())
 
 
-@app.get("/", response_model=ServiceInfo, tags=["meta"])
-async def root() -> ServiceInfo:
+_STATIC = Path(__file__).parent / "static"
+
+
+@app.get("/", include_in_schema=False)
+async def ui() -> FileResponse:
+    return FileResponse(_STATIC / "index.html")
+
+
+@app.get("/info", response_model=ServiceInfo, tags=["meta"])
+async def info() -> ServiceInfo:
     return ServiceInfo(
         version=__version__,
         description="Security headers scanner API.",

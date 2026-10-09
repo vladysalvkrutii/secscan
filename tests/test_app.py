@@ -12,8 +12,14 @@ def test_header_weights_sum_to_100():
     assert sum(weight for weight, _ in SECURITY_HEADERS.values()) == 100
 
 
-def test_root():
-    body = client.get("/").json()
+def test_ui_served_at_root():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+
+
+def test_info():
+    body = client.get("/info").json()
     assert body["name"] == "SecScan"
     assert "version" in body
 

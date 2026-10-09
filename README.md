@@ -26,6 +26,18 @@ shipped, deployed and observed.
 
 ---
 
+## Screenshots
+
+**Web UI** — type a URL, get a graded report with per-header advice:
+
+![SecScan web UI](docs/ui.jpg)
+
+**Grafana dashboard** — total scans, error rate, scans by grade, p95 latency:
+
+![Grafana dashboard](docs/grafana-dashboard.webp)
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -110,7 +122,8 @@ Against a real cluster the image comes from GHCR (`k8s/deployment.yaml`) and `k8
 
 | Method | Path       | Description                                 |
 | ------ | ---------- | ------------------------------------------- |
-| GET    | `/`        | Service metadata                            |
+| GET    | `/`        | Web UI (scan form + graded report)          |
+| GET    | `/info`    | Service metadata (JSON)                     |
 | GET    | `/health`  | Liveness/readiness probe                    |
 | GET    | `/scan`    | Scan a URL: `/scan?url=https://github.com`  |
 | GET    | `/metrics` | Prometheus metrics                          |
