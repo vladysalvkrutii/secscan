@@ -91,10 +91,18 @@ make run         # uvicorn with autoreload → http://127.0.0.1:8000/docs
 
 ### 3. Deploy to Kubernetes
 
+Spin up a local cluster with [kind](https://kind.sigs.k8s.io/) and deploy (verified: 2/2 pods, reachable via the Service):
+
 ```bash
-kubectl apply -f k8s/
-kubectl get pods -l app=secscan
+kind create cluster --name secscan --config k8s/kind-config.yaml
+kind load docker-image secscan:local --name secscan
+kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml
+kubectl set image deployment/secscan api=secscan:local   # use the locally loaded image
+kubectl rollout status deployment/secscan
+kubectl port-forward svc/secscan 8088:80                 # curl http://localhost:8088/health
 ```
+
+Against a real cluster the image comes from GHCR (`k8s/deployment.yaml`) and `k8s/ingress.yaml` exposes it.
 
 ---
 

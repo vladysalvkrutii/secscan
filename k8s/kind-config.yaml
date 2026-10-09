@@ -1,0 +1,20 @@
+# Local kind cluster, ingress-ready.
+#   kind create cluster --name secscan --config k8s/kind-config.yaml
+# Then (optional) install an ingress controller and apply k8s/ingress.yaml.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
