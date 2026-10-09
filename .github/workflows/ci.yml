@@ -48,7 +48,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy scan (report HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           format: table
@@ -57,7 +57,7 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Trivy gate (fail on CRITICAL)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           format: table
