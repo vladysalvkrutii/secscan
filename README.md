@@ -3,7 +3,7 @@
 > A security-headers scanner API, wrapped in a **production-style DevOps pipeline** —
 > containerization, CI/CD, Kubernetes, monitoring and logging.
 
-[![CI](https://github.com/VladKrytii/secscan/actions/workflows/ci.yml/badge.svg)](https://github.com/VladKrytii/secscan/actions/workflows/ci.yml)
+[![CI](https://github.com/vladysalvkrutii/secscan/actions/workflows/ci.yml/badge.svg)](https://github.com/vladysalvkrutii/secscan/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
 ![Docker](https://img.shields.io/badge/docker-multi--stage%20·%20non--root-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)

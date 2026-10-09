@@ -86,7 +86,7 @@ app = FastAPI(
     ),
     version=__version__,
     license_info={"name": "MIT"},
-    contact={"name": "Vladyslav Krutii", "url": "https://github.com/VladKrytii"},
+    contact={"name": "Vladyslav Krutii", "url": "https://github.com/vladysalvkrutii"},
 )
 
 # Prometheus scrape endpoint.
